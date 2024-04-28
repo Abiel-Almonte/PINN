@@ -17,9 +17,11 @@ The loss function (MSE) of the DNN is the following:
 
 $$\cal L(\theta)= \cal L_{ic}(\theta) + \cal L_{bc}(\theta) + \cal L_{r}(\theta)$$
 
-Initial Condition Loss:$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2$$
+Initial Condition Loss:
+$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2$$
 
-Boundary Condition Loss:$${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|{\cal B[u_\theta]}(t^i_{bc}, x^i_{bc})\right|^2$$
+Boundary Condition Loss:
+$${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|{\cal B[u_\theta]}(t^i_{bc}, x^i_{bc})\right|^2$$
 
 Residual:
 $${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}} \left|{\cal R_\theta}(t^i_{r}, x^i_{r})\right|^2$$
