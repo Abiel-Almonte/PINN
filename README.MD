@@ -3,7 +3,7 @@ Employing Deep Neural Networks (DNNs) to solve time dependent systems defined by
 
 More specifically, DNN's automatic differentiation is utilizied to differentiate with respect to input and model parameters, yielding a network that "respects" any principles from physical laws interwoven deep within a observed system often represented as a time dependent partial differential equation with the following form: 
 
-$$ u_t  + {\cal N [u]}= 0, \; t\in [0,T], \; x\in\Omega$$
+$$ u_t  + {\cal N [u]}= 0, t\in [0,T],  x\in\Omega$$
 With the following Inital and Boundary Condition:
 $$ u(t,x)|_{t=0}= u(0,x)= g(x)$$ 
 $${\cal B[u]}= 0$$
@@ -31,10 +31,10 @@ Where all $t, x$ are sampled during optimization.
 [More Information on the theory of PINNs](https://doi.org/10.1016/j.jcp.2018.10.045)
 
 ### One-Dimensional Wave Equation:
-$$\frac{\partial^2u}{\partial t^2}= 4\nabla^2_u \implies \frac{\partial^2u}{\partial t^2} - 4 \frac{\partial^2u}{\partial x^2} = 0, \;\; x\in [0,1], \; t\in [0,1]$$
+$$\frac{\partial^2u}{\partial t^2}= 4\nabla^2_u \implies \frac{\partial^2u}{\partial t^2} - 4 \frac{\partial^2u}{\partial x^2} = 0, x\in [0,1], t\in [0,1]$$
 
 Inital Conditions:
-$$u(0,x)= g(x)= sin(\pi x)+ \frac{1}{2}sin(4\pi x), \; \frac{\partial u}{\partial t}(0,x)= f(x)= 0 $$ 
+$$u(0,x)= g(x)= sin(\pi x)+ \frac{1}{2}sin(4\pi x), \frac{\partial u}{\partial t}(0,x)= f(x)= 0 $$ 
 
 Boundaries:
 $$ u(t,0)= u(t,1)= h(t,x)= 0$$
