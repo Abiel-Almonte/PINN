@@ -33,7 +33,7 @@ $$\gamma(v)=
 \begin{bmatrix}
 \cos(2\pi Bv) \\
 \sin(2\pi Bv) 
-\end{bmatrix}, B \in \R^{m \times d}$$
+\end{bmatrix}, B \in\R^{m \times d}$$
 
 ### Weighted Loss:
 $${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2 + \left|\frac{\partial u_\theta}{\partial t}(0, x^i_{ic})\right|^2 $$
@@ -56,4 +56,4 @@ $$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
 ### Gradient Descent ([Random Weight Facotrization](https://arxiv.org/pdf/2210.01274)):
 $$\theta_{n+1}= \theta_n -\eta\nabla_\theta \cal L(\theta)$$
 $$\theta_{(k,l)} := s_{(k,l)} \cdot v_{(k,l)}  \implies W_{l} = diag(s_l)\cdot V_l$$
-$$\implies \theta_{n+1}^{(k,l)}= \theta_n^{(k,l)} -\eta \left(s^{(k,l)}_n +v^{(k,l)}_n\right)\nabla_\theta \cal L(\theta^{(k,l)}) + \eta^2[\nabla_\theta \cal L(\theta^{(k,l)})]^2$$
+$$\implies \theta_{n+1}^{(k,l)}= \theta_n^{(k,l)} -\eta \left(s_n^{(k,l)} +v_n^{(k,l)}\right)\nabla_\theta \cal L(\theta^{(k,l)}) + \eta^2[\nabla_\theta \cal L(\theta^{(k,l)})]^2$$
