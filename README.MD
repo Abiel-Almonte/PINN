@@ -1,14 +1,14 @@
 # Physics Informed Neural Networks (PINNs):
-Employing Deep Neural Networks (DNNs), a multi-layer precepton (MLP), to solve time dependent systems defined by laws of physics.
+Employing Deep Neural Networks (DNNs), a multi-layer perceptron (MLP), to solve time dependent systems defined by laws of physics.
 
-More specifically, MLP's automatic differentiation is utilizied to differentiate with respect to input and model parameters, yielding a network that "respects" any principles from physical laws interwoven deep within a observed system often represented as a time dependent partial differential equation with the following form: 
+More specifically, MLP's automatic differentiation is utilized to differentiate with respect to input and model parameters, yielding a network that "respects" any principles from physical laws interwoven deep within a observed system often represented as a time dependent partial differential equation with the following form: 
 
 $$ u_t  + {\cal N [u]}= 0, t\in [0,T],  x\in\Omega$$
 With the following Inital and Boundary Condition:
 $$ u(t,x)|_{t=0}= u(0,x)= g(x)$$ 
 $${\cal B[u]}= 0$$
 
-$u$ is the unknown hidden solution governed by the PDE, substituted with a neural network with the from $u_\theta(t,x)$, where $\theta$ are all the parameters of the linear combinations that models the neural network.
+$u$ is the unknown hidden solution governed by the PDE, substituted with a neural network with the form $u_\theta(t,x)$, where $\theta$ are all the parameters of the linear combinations that models the neural network.
 
 [More Information on the theory of PINNs](https://doi.org/10.1016/j.jcp.2018.10.045)
 
@@ -32,10 +32,10 @@ $$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
 $$\gamma(v)=
 \begin{bmatrix}
 \cos(2\pi Bv) \\
-\sin(2\pi Bv) 
-\end{bmatrix}, B \in\R^{m \times d}$$
+\sin(2\pi Bv) \\
+\end{bmatrix}, B \in \mathbb R^{m \times d}$$
 
-### Weighted Loss:
+### Weighted Loss (MSE):
 $${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2 + \left|\frac{\partial u_\theta}{\partial t}(0, x^i_{ic})\right|^2 $$
 
 $${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|^2$$
@@ -53,7 +53,7 @@ $||\cdot|| \implies L^2$ norm
 
 $$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
 
-### Gradient Descent ([Random Weight Facotrization](https://arxiv.org/pdf/2210.01274)):
+### Gradient Descent with [Random Weight Factorization](https://arxiv.org/pdf/2210.01274):
 $$\theta_{n+1}= \theta_n -\eta\nabla_\theta \cal L(\theta)$$
 $$\theta_{(k,l)} := s_{(k,l)} \cdot v_{(k,l)}  \implies W_{l} = diag(s_l)\cdot V_l$$
 $$\implies \theta_{n+1}^{(k,l)}= \theta_n^{(k,l)} -\eta \left(s_n^{(k,l)} +v_n^{(k,l)}\right)\nabla_\theta \cal L(\theta^{(k,l)}) + \eta^2[\nabla_\theta \cal L(\theta^{(k,l)})]^2$$
