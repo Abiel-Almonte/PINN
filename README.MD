@@ -37,7 +37,7 @@ Inital Conditions:
 $$u(0,x)= g(x)= sin(\pi x)+ \frac{1}{2}sin(4\pi x), \frac{\partial u}{\partial t}(0,x)= f(x)= 0 $$ 
 
 Boundaries:
-$$ u(t,0)= u(t,1)= h(t,x)= 0$$
+$$u(t,0)= u(t,1)= h(t,x)= 0$$
 
 Exact Solution:
 $$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
