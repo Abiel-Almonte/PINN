@@ -1,4 +1,4 @@
-# Physics Informed Neural Networks (PINN):
+# Physics Informed Neural Networks (PINNs):
 Employing Deep Neural Networks (DNNs), a multi-layer precepton (MLP), to solve time dependent systems defined by laws of physics.
 
 More specifically, MLP's automatic differentiation is utilizied to differentiate with respect to input and model parameters, yielding a network that "respects" any principles from physical laws interwoven deep within a observed system often represented as a time dependent partial differential equation with the following form: 
@@ -47,11 +47,11 @@ $$\cal L(\theta)= \lambda_{ic}L_{ic} + \lambda_{bc}L_{bc} + \lambda_{r}L_{r}$$
 
 #### Global Weights ($\lambda$):
 
-$$\lambda_{*} = \frac{||\nabla_\theta {\cal L_{ic}(\theta)}||+ ||\nabla_\theta {\cal L_{bc}(\theta)}||+ ||\nabla_\theta {\cal L_r(\theta)}||}{||\nabla_\theta {\cal L_*(\theta)}||}$$
+$$\lambda_{\ast} = \frac{||\nabla_\theta {\cal L_{ic}(\theta)}||+ ||\nabla_\theta {\cal L_{bc}(\theta)}||+ ||\nabla_\theta {\cal L_r(\theta)}||}{||\nabla_\theta {\cal L_\ast(\theta)}||}$$
 
 $||\cdot|| \implies L^2$ norm
 
-$$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new}$$
+$$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
 
 ### Gradient Descent ([Random Weight Facotrization](https://arxiv.org/pdf/2210.01274)):
 $$\theta_{n+1}= \theta_n -\eta\nabla_\theta \cal L(\theta)$$
