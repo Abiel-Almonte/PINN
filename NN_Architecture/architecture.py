@@ -1,5 +1,5 @@
 from turtle import forward
-from typing import Tuple
+from typing import Tuple, Dict
 import math
 import torch
 from torch import nn
@@ -22,7 +22,6 @@ def exact_solution(
         + 0.5*math.sin(4*math.pi*x)*math.cos(8*math.pi*t)
 
     return u
-
 
 ############################################################################################
 
@@ -71,8 +70,6 @@ class GuassianInputEmbeddings(nn.Module):
 #-> initializing conventional linear layers where, w= s*v => W= diag(s)*V, on a coordinate based MLP, accelerating and improving training.
 #  https://arxiv.org/pdf/2210.01274
 
-#scale vector s
-#size= 128 128 
 def sample_s(
     sigma: float= SIGMA_RWF,
     mu: float= MU,
@@ -82,12 +79,28 @@ def sample_s(
     s= torch.randn(size)*sigma + mu
     return torch.exp(s)
 
-def factorized_weight():pass
+def factorized_weights(
+    in_features: int,
+    out_features: int,
+    factory_kwargs: Dict[str]
+)-> Tuple[torch.Tensor]:
+    
+    w = torch.nn.Parameter(
+            torch.empty(
+                (in_features, out_features), **factory_kwargs
+            )
+        )
+        
+    s= sample_s(size= (in_features, out_features))
+    v= w/s
+
+    return v,s 
+    
 
 class FactorizedLinear(nn.Module):
     in_features: int
     out_features: int
-    weight: torch.Tensor
+    w: torch.Tensor
 
     def __init__(
         self,
@@ -97,24 +110,40 @@ class FactorizedLinear(nn.Module):
         device=None,
         dtype=None
     ) -> None:
-        
-        factory_kwargs = {'device': device, 'dtype': dtype}
+
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = torch.Parameter(torch.empty((out_features, in_features), **factory_kwargs))
-        self.register_parameter('bias', None)
+        self.bias= bias
+
+        self.v, self.s= factorized_weights(
+            in_features,
+            out_features,
+            {'device': device, 'dtype': dtype}
+        )
+
+        if bias: self.bias= torch.nn.Parameter(
+                    torch.empty(
+                        (out_features), 
+                        **{'device': device, 'dtype': dtype}
+                    )
+                )
+        else: self.register_parameter('bias', None)
+
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
-        torch.nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+        torch.nn.init.kaiming_uniform_(self.v*self.s, a=math.sqrt(5))
+        if self.bias is not None:
+            fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(self.v*self.s)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            torch.nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return torch.F.linear(input, self.weight, self.bias)
+        return torch.nn.functional.linear(input, self.v*self.s, self.bias)
 
     def extra_repr(self) -> str:
         return f'in_features={self.in_features}, out_features={self.out_features}, bias={self.bias is not None}'
-
 
 ############################################################################################
 
@@ -139,11 +168,11 @@ class MLP:
 
         self.hidden_layers= nn.Sequential(
             *[nn.Sequential(
-                *[nn.Linear(n_inputs, neurons), act_fn]
+                *[FactorizedLinear(n_inputs, neurons), act_fn]
             ) for _ in range(n_layers-1)]
         )
 
-        self.output_layer= nn.Linear(
+        self.output_layer= FactorizedLinear(
             neurons, n_outputs
         )
 
