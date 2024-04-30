@@ -48,6 +48,4 @@ $$\cal L(\theta)= \lambda_{ic}L_{ic} + \lambda_{bc}L_{bc} + \lambda_{r}L_{r}$$
 #### Global Weights ($\lambda$):
 $$\lambda_{\ast} = \frac{||\nabla_\theta {\cal L_{ic}(\theta)}||+ ||\nabla_\theta {\cal L_{bc}(\theta)}||+ ||\nabla_\theta {\cal L_r(\theta)}||}{||\nabla_\theta {\cal L_\ast(\theta)}||}$$
 
-$||\cdot|| \implies L^2$ norm
-
 $$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
