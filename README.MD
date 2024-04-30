@@ -26,9 +26,9 @@ $$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
 
 ---
 ## MLP Implmentation:
+![PINN Diagram](./media/PINN.png)
 
-
-### Input Embeddings ([Random Fourier Features](https://arxiv.org/pdf/2006.10739)):
+### RFF Embeddings ([Random Fourier Features](https://arxiv.org/pdf/2006.10739)):
 $$\gamma(v)=
 \begin{bmatrix}
 \cos(2\pi Bv) \\
@@ -51,10 +51,3 @@ $$\lambda_{\ast} = \frac{||\nabla_\theta {\cal L_{ic}(\theta)}||+ ||\nabla_\thet
 $||\cdot|| \implies L^2$ norm
 
 $$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
-
-### Gradient Descent with [Random Weight Factorization](https://arxiv.org/pdf/2210.01274):
-$$\theta_{n+1}= \theta_n -\eta\nabla_\theta \cal L(\theta)$$
-
-$$\theta_{(k,l)} := s_{(k,l)} \cdot v_{(k,l)}  \implies W_{l} = diag(s_l)\cdot V_l$$
-
-$$\implies \theta_{n+1}^{(k,l)}= \theta_n^{(k,l)} -\eta \left(s_n^{(k,l)} +v_n^{(k,l)}\right)\nabla_\theta \cal L(\theta^{(k,l)}) + \eta^2[\nabla_\theta \cal L(\theta^{(k,l)})]^2$$
