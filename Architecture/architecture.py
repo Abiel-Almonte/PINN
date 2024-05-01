@@ -19,15 +19,16 @@ def sample_B(
     ## torch.randn creates a random sample from the standard Gaussian distribution. 
     ## The std dev is changed via multiplication while the mean is changed by addition.
 
-    return torch.randn(size)* scale
+    return torch.randn(size, device='cuda')* scale
 
 def rff_emb(
-    _x: torch.Tensor,
+    v: torch.Tensor,
     B: torch.Tensor
 )-> torch.Tensor:
-
-    _x_proj= torch.matmul((2* math.pi* _x), B) # matmul same as @ operator
-    return torch.cat((torch.sin(_x_proj),  torch.cos(_x_proj)), dim=-1)
+    
+    v= v @ B # matmul 
+    v_proj=  2* math.pi* v
+    return torch.cat((torch.sin(v_proj),  torch.cos(v_proj)), dim=-1)
 
 class RFFEmbeddings(nn.Module):
     def __init__(
@@ -39,14 +40,16 @@ class RFFEmbeddings(nn.Module):
 
         self.in_features= in_features
         self.out_features= out_features
-        self.B= sample_B(size=(in_features, out_features))
+        self.B= sample_B(size=(in_features, out_features//2))
+
+        self.register_buffer('b', self.B)
     
     def forward(
         self,
-        _x: torch.Tensor
+        v: torch.Tensor
     )-> torch.Tensor:
         
-        return rff_emb(_x, self.B)
+        return rff_emb(v, self.B)
 
     def extra_repr(self) -> str:
         return f'in_features={self.in_features}, out_features={self.out_features}'
@@ -63,23 +66,17 @@ class MLP(nn.Module):
     )-> None:
         
         super().__init__()
-        self._in= n_inputs
-        self._neurons= neurons
-        
         act_fn= nn.Tanh()
 
         self.input_layer= nn.Sequential(
-            *[nn.Linear(n_inputs, n_inputs), act_fn]
-        )
-
-        self.embeddings= RFFEmbeddings(
-            n_inputs, neurons
+            *[nn.Linear(n_inputs, n_inputs),
+              RFFEmbeddings(n_inputs, neurons), act_fn]
         )
 
 
         self.hidden_layers= nn.Sequential(
             *[nn.Sequential(
-                *[nn.Linear(n_inputs, neurons), act_fn]
+                *[nn.Linear(neurons, neurons), act_fn]
             ) for _ in range(n_layers-1)]
         )
 
@@ -89,11 +86,10 @@ class MLP(nn.Module):
 
     def forward(
         self,
-        _x: torch.Tensor
+        v: torch.Tensor
     )-> torch.Tensor:
 
-        _x= self.input_layer(_x)
-        _x= self.embeddings(_x)
-        _x= self.hidden_layers(_x)
+        v= self.input_layer(v) # v-> gamma
+        v= self.hidden_layers(v) # gamma-> h
 
-        return self.output_layer(_x)
+        return self.output_layer(v) # h-> u
