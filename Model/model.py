@@ -1,26 +1,25 @@
-from typing import Tuple
+from typing import Dict
+from collections import OrderedDict
 from Architecture import MLP
-import math
 import torch
 from torch import(
-    autograd,
-    nn,
-    optim,
+    autograd, nn, optim,
+    sin, cos, 
+    pi,
 )
 
 DEVICE='cuda'
+DOMAIN=(0,1) # & range 
 ETA= 1e-3  #lr
 ALPHA= 0.5 #momentum
 
 def exact_solution( 
-    x: float, 
-    t: float
-)-> float:
+    x: torch.Tensor, 
+    t: torch.Tensor
+)-> torch.Tensor:
     
-    u= torch.sin(torch.pi*x)*torch.cos(2*torch.pi*t)\
-        + 0.5*torch.sin(4*torch.pi*x)*torch.cos(8*torch.pi*t)
-
-    return u
+    return sin(pi*x)*cos(2*pi*t) \
+        + 0.5*sin(4*pi*x)*cos(8*pi*t)
 
 class WaveEqNN:
 
@@ -29,56 +28,54 @@ class WaveEqNN:
         steps: int
     )-> None:
         
-        coordinates= torch.linspace(0, 1, steps, device='cuda', requires_grad= True)
+        coordinates= torch.linspace(DOMAIN[0], DOMAIN[-1], steps, device= DEVICE, requires_grad= True)
         idx_x, idx_t= torch.randperm(coordinates.nelement()), torch.randperm(coordinates.nelement())
-        x, t= coordinates.view(-1)[idx_x], coordinates.view(-1)[idx_t]
+        x, t= coordinates[idx_x], coordinates[idx_t]
+        t.requires_grad()
+        x.requires_grad()
+        self.x, self.t= x.unsqueeze(-1), t.unsqueeze(-1)
+        self.null= torch.zeros_like(self.x, device= DEVICE, requires_grad=True)
+        self.ones= torch.ones_like(self.x, device= DEVICE, requires_grad=True)
 
-        self.x, self.t= x.view(-1,1), t.view(-1,1)
-        self.null= torch.zeros((x.shape[0],1))
-
-        self.model= MLP().to(DEVICE)
-
-        self.optimizer= optim.Adam(
-            self.model.parameters(),lr= ETA
-        )
-
+        self.DNN= MLP().to(DEVICE)
+        self.optimizer= optim.Adam(self.DNN.parameters(),lr= ETA)
         self.mse= nn.MSELoss()
         self.loss= 0
-        self.iter=0
+        self.iter= 0
 
-    def compute_res_grads(
+    def compute_res(
         self,
         x: torch.Tensor,
         t: torch.Tensor,
-    )-> Tuple[torch.Tensor, ...]:
+    )-> Dict[str, torch.Tensor]:
         
         v= torch.hstack((x,t))
-        u= self.model(v)
+        v_ic= torch.hstack((x, self.null))
+        v_bound1= torch.hstack((self.null,t))
+        v_bound2= torch.hstack((self.ones,t))
 
-        u_x=  autograd.grad(u, x, torch.ones_like(u), create_graph=True)[0]
-        u_xx= autograd.grad(u_x, x, torch.ones_like(u_x), create_graph=True)[0]
+        res= OrderedDict()
 
-        u_t= autograd.grad(u, t, torch.ones_like(u), create_graph=True)[0]
-        u_tt= autograd.grad(u_t, t, torch.ones_like(u_t), create_graph=True)[0]
+        u= self.DNN(v)
+        res['ic']= self.DNN(v_ic)
+        res['bound1']= self.DNN(v_bound1)
+        res['bound2']= self.DNN(v_bound2)
 
-        v_ic= torch.hstack((x, torch.zeros_like(t)))
-        u_ic= self.model(v_ic)
-        u_t_ic= autograd.grad(u_ic, t, torch.ones_like(u), create_graph=True)[0]
+        u_x= autograd.grad(u, x, self.ones, create_graph= True)[0]
+        u_t= autograd.grad(u, t, self.ones, create_graph= True)[0]
+        res['u_xx']= autograd.grad(u_x, x, self.ones, create_graph= True, retain_graph= True)[0]
+        res['u_tt']= autograd.grad(u_t, t, self.ones, create_graph= True, retain_graph= True)[0]
 
-        v_bound1= torch.hstack((torch.zeros_like(x),t))
-        v_bound2= torch.hstack((torch.ones_like(x),t))
-        u_bound1= self.model(v_bound1)
-        u_bound2= self.model(v_bound2)
-
-        return u_xx, u_tt, u_bound1, u_bound2, u_ic, u_t_ic
+        return res
 
     def compute_loss(self):
 
-        u_xx_pred, u_tt_pred, u_bound1_pred, u_bound2_pred, u_ic_pred, u_t_ic_pred= self.compute_res_grads(self.x, self.t)
-        g= exact_solution(self.x, 0)
+        res= self.compute_res(self.x, self.t)
+        g= exact_solution(self.x, self.null)
 
-        ic_loss= self.mse(u_ic_pred, g) + self.mse(u_t_ic_pred, self.null)
-        bc_loss= self.mse(u_bound1_pred, u_bound2_pred)
-        r_loss= self.mse(u_tt_pred - 4*u_xx_pred, self.null)
-
-
+        ic_loss= self.mse(res['ic'], g)
+        bc_loss= self.mse(res['bound1'], res['bound2'])
+        de_loss= self.mse(res['u_tt']- 4*res['u_xx'], self.null)
+        
+        loss= ic_loss + bc_loss + de_loss
+        loss.backward()
