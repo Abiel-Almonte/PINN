@@ -28,7 +28,7 @@ $$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
 ## MLP Implementation:
 ![PINN Diagram](./media/PINN.png)
 
-### [RFF]((https://arxiv.org/pdf/2006.10739)) Embeddings:
+### [RFF](https://arxiv.org/pdf/2006.10739) Embeddings:
 $$\gamma(v)=
 \begin{bmatrix}
 \cos(2\pi Bv) \\
