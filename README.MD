@@ -18,34 +18,32 @@ $$\frac{\partial^2u}{\partial t^2}= 4\nabla^2_u \implies \frac{\partial^2u}{\par
 ### Inital Conditions:
 $$u(0,x)= g(x)= sin(\pi x)+ \frac{1}{2}sin(4\pi x), \frac{\partial u}{\partial t}(0,x)= f(x)= 0 $$ 
 
-### Boundaries:
+### Boundary Conditions:
 $$u(t,0)= u(t,1)= h(t,x)= 0$$
 
 ### Exact Solution:
 $$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
 
 ---
-## MLP Implmentation:
+## MLP Implementation:
 ![PINN Diagram](./media/PINN.png)
 
-### RFF Embeddings ([Random Fourier Features](https://arxiv.org/pdf/2006.10739)):
+### [RFF]((https://arxiv.org/pdf/2006.10739)) Embeddings:
 $$\gamma(v)=
 \begin{bmatrix}
 \cos(2\pi Bv) \\
 \sin(2\pi Bv) \\
-\end{bmatrix}, B \in \mathbb R^{m \times d}$$
+\end{bmatrix}, B \in \mathbb R^{2 \times\frac{d_l}{2}}$$
 
-### Weighted Loss (MSE):
-$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2 + \left|\frac{\partial u_\theta}{\partial t}(0, x^i_{ic})\right|^2 $$
+### Weighted Loss:
+$$\cal L(\theta)= \lambda_{ic}L_{ic} + \lambda_{bc}L_{bc} + \lambda_{de}L_{de}$$
+
+$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2$$
 
 $${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|^2$$
 
-$${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}} \left|u_{\theta}(t^i_r, x^i_r) -4u_{\theta\theta}(t^i_r, x^i_r)\right|^2$$
+$${\cal L_{de}}(\theta)= \frac{1}{N_{de}}\sum_{i=1}^{N_{de}} \left|\frac{\partial u_\theta}{\partial t}(t^i_{de}, x^i_{de}) -4\frac{\partial^2 u_\theta}{\partial x^2}(t^i_{de}, x^i_{de})\right|^2$$
 
-$$\cal L(\theta)= \lambda_{ic}L_{ic} + \lambda_{bc}L_{bc} + \lambda_{r}L_{r}$$
-
-
-#### Global Weights ($\lambda$):
 $$\lambda_{\ast} = \frac{||\nabla_\theta {\cal L_{ic}(\theta)}||+ ||\nabla_\theta {\cal L_{bc}(\theta)}||+ ||\nabla_\theta {\cal L_r(\theta)}||}{||\nabla_\theta {\cal L_\ast(\theta)}||}$$
 
 $$\lambda_{new} = \alpha \lambda_{old} + (1-\alpha)\lambda_{new^\ast}$$
