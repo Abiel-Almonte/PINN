@@ -1,9 +1,8 @@
-import math
 import torch
 from torch import nn
 from typing import Tuple
 
-SCALE: float= 10. #standard deviation to select B for RFFE
+SCALE: torch.float32= 1 #standard deviation to select B for RFFE
 
 ############################################################################################
 
@@ -27,7 +26,8 @@ def rff_emb(
 )-> torch.Tensor:
     
     v= v @ B # matmul 
-    v_proj=  2* math.pi* v
+
+    v_proj=  2* torch.pi* v
     return torch.cat((torch.sin(v_proj),  torch.cos(v_proj)), dim=-1)
 
 class RFFEmbeddings(nn.Module):
@@ -48,7 +48,6 @@ class RFFEmbeddings(nn.Module):
         self,
         v: torch.Tensor
     )-> torch.Tensor:
-        
         return rff_emb(v, self.B)
 
     def extra_repr(self) -> str:
@@ -60,8 +59,8 @@ class MLP(nn.Module):
     def __init__(
         self,
         n_inputs: int= 2,
-        neurons: int= 128,
-        n_layers: int= 6,
+        neurons: int= 256,
+        n_layers: int= 5,
         n_outputs: int= 1,
     )-> None:
         
