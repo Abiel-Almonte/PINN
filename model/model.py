@@ -1,6 +1,6 @@
 from typing import Dict
 from collections import OrderedDict
-from Architecture import MLP
+from architecture import MLP
 import torch
 from torch import(
     autograd, nn, optim,
