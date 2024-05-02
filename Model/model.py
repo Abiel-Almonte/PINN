@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Dict
 from collections import OrderedDict
 from Architecture import MLP
 import torch
@@ -11,7 +11,7 @@ from torch import(
 DOMAIN=(0,1)
 DEVICE='cuda'
 ETA= 5e-3 #lr
-ALPHA: torch.float32= 0.3 #momentum
+ALPHA: torch.float32= 0.3
 C2: torch.float32= 4
 
 def exact_solution( 
@@ -40,7 +40,7 @@ class WaveEqNN:
         self.loss= 0
         self.iter= 0
 
-    def compute_res(
+    def compute_result(
         self,
         x: torch.Tensor,
         t: torch.Tensor,
@@ -74,7 +74,7 @@ class WaveEqNN:
         x, t= coordinates[idx_x], coordinates[idx_t]
         x, t= x.unsqueeze(-1), t.unsqueeze(-1)
 
-        res= self.compute_res(x, t)
+        res= self.compute_result(x, t)
         g= exact_solution(x, self.null)
 
         ic_loss= self.mse(res['ic'], g)
