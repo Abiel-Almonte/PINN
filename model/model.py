@@ -10,8 +10,7 @@ from torch import(
 
 DOMAIN=(0,1)
 DEVICE='cuda'
-ETA= 5e-3 #lr
-ALPHA: torch.float32= 0.3
+ETA= 0.5 #lr
 C2: torch.float32= 4
 
 def exact_solution( 
@@ -25,95 +24,83 @@ def exact_solution(
 class WaveEqNN:
     def __init__(
         self,
-        size: int
+        x:torch.Tensor,
+        t:torch.Tensor,
     )-> None:
         
-        self.size= size
+        self.x= x
+        self.t= t
 
-        self.null= torch.zeros((size, 1), device= DEVICE, requires_grad=True)
-        self.ones= torch.ones((size, 1), device= DEVICE, requires_grad=True)
+        self.zeros= torch.zeros((x.shape[0], 1), device= DEVICE)
+        self.ones= torch.ones((x.shape[0], 1), device= DEVICE)
 
         self.DNN= MLP().to(DEVICE)
-        self.optimizer= optim.Adam(self.DNN.parameters(),lr= ETA)
-        self.mse= nn.MSELoss()
-        self.lambdas= {'lambda_ic': 0, 'lambda_bc': 0, 'lambda_de': 0}
-        self.loss= 0
-        self.iter= 0
 
-    def compute_result(
-        self,
-        x: torch.Tensor,
-        t: torch.Tensor,
-    )-> Dict[str, torch.Tensor]:
+        self.criterion= nn.L1Loss(reduction='mean')
+        self.optimizer= optim.LBFGS(
+            self.DNN.parameters(),
+            lr= ETA, 
+            tolerance_grad=1e-05,
+            history_size=200,
+            max_iter=200000,
+            max_eval=50000,
+            line_search_fn="strong_wolfe",
+        )
+
+        self.iter= 0
+        self.best_model= None
+        self.best_loss= float('inf')
+
+    def compute_residuals(self)-> Dict[str, torch.Tensor]:
         
-        v= torch.hstack((x,t))
-        v_ic= torch.hstack((x, self.null))
-        v_bound1= torch.hstack((self.null,t))
-        v_bound2= torch.hstack((self.ones,t))
+        v= torch.hstack((self.x,self.t))
+        v_ic= torch.hstack((self.x, self.zeros))
+        v_bound1= torch.hstack((self.zeros,self.t))
+        v_bound2= torch.hstack((self.ones,self.t))
 
         res= OrderedDict()
-
-        u= self.DNN(v)
         res['ic']= self.DNN(v_ic)
         res['bound1']= self.DNN(v_bound1)
         res['bound2']= self.DNN(v_bound2)
+        res['u_net']= self.DNN(v)
 
-        u_x= autograd.grad(u, x, self.ones, create_graph= True)[0]
-        u_t= autograd.grad(u, t, self.ones, create_graph= True)[0]
-        res['u_xx']= autograd.grad(u_x, x, self.ones, create_graph= True)[0]
-        res['u_tt']= autograd.grad(u_t, t, self.ones, create_graph= True)[0]
+        u_x= autograd.grad(res['u_net'], self.x, grad_outputs=torch.ones_like(res['u_net']), create_graph=True, retain_graph= True)[0]
+        u_t= autograd.grad(res['u_net'], self.t, grad_outputs=torch.ones_like(res['u_net']), create_graph=True, retain_graph= True)[0]
+
+        u_xx= autograd.grad(u_x, self.x, grad_outputs=torch.ones_like(u_x), create_graph=True, retain_graph= True)[0]
+        u_tt= autograd.grad(u_t, self.t, grad_outputs=torch.ones_like(u_t), create_graph=True, retain_graph= True)[0]
+
+        res['f']= u_tt - C2*u_xx
 
         return res
 
-    def compute_loss(self):
-        self.DNN.zero_grad()
+    def closure(self):
         self.optimizer.zero_grad()
 
-        coordinates= torch.linspace(DOMAIN[0], DOMAIN[1], self.size, device= 'cuda', requires_grad= True)
-        idx_x, idx_t= torch.randperm(coordinates.nelement()), torch.randperm(coordinates.nelement())
-        x, t= coordinates[idx_x], coordinates[idx_t]
-        x, t= x.unsqueeze(-1), t.unsqueeze(-1)
+        res= self.compute_residuals()
+        g= exact_solution(self.x, self.zeros)
+        u= exact_solution(self.x, self.t)
 
-        res= self.compute_result(x, t)
-        g= exact_solution(x, self.null)
+        ic_loss= self.criterion(res['ic'], g)
+        bc_loss= self.criterion(res['bound1'], res['bound2'])
+        r_loss= self.criterion(res['f'], self.zeros)
+        #u_loss= self.criterion(res['u_net'],u )
 
-        ic_loss= self.mse(res['ic'], g)
-        bc_loss= self.mse(res['bound1'], res['bound2'])
-        de_loss= self.mse(res['u_tt'], C2*res['u_xx'])
-        
-        de_loss.backward(retain_graph=True)
-        de_loss_l2norm= torch.cat([p.grad.flatten() for p in self.DNN.parameters() if p.grad is not None]).pow(2).sum().sqrt()
-        self.DNN.zero_grad()
+        loss=  r_loss+ ic_loss + bc_loss
+        loss.backward()
 
-        bc_loss.backward(retain_graph=True)
-        bc_loss_l2norm= torch.cat([p.grad.flatten() for p in self.DNN.parameters()]).pow(2).sum().sqrt()
-        self.DNN.zero_grad()
-
-        ic_loss.backward(retain_graph=True)
-        ic_loss_l2norm= torch.cat([p.grad.flatten() for p in self.DNN.parameters()]).pow(2).sum().sqrt()
-        self.DNN.zero_grad()
-
-        l2_norm=  ic_loss_l2norm + bc_loss_l2norm + de_loss_l2norm
-
-        lambda_new_ast= (
-            lambda old_lambda, new_lambda: old_lambda*ALPHA + (1-ALPHA)*new_lambda
-        )
-        
-        self.lambdas['lambda_ic']= lambda_new_ast(self.lambdas['lambda_ic'], l2_norm/ic_loss_l2norm)
-        self.lambdas['lambda_bc']= lambda_new_ast(self.lambdas['lambda_bc'], l2_norm/bc_loss_l2norm)
-        self.lambdas['lambda_de']= lambda_new_ast(self.lambdas['lambda_de'], l2_norm/de_loss_l2norm)
-
-        self.loss=  self.lambdas['lambda_ic']*ic_loss + self.lambdas['lambda_bc']*bc_loss + self.lambdas['lambda_de']*de_loss
-        self.loss.backward(retain_graph=True)
         self.iter+=1
 
         if not self.iter % 100:
-            print('Iteration: {:}, MSE Loss: {:0.6f}'.format(self.iter, self.loss))
-            print(self.lambdas)
+            print('Iteration: {:}, L1 Loss: {:0.6f}'.format(self.iter, loss))
+        
+        if self.best_loss> loss:
+            self.best_loss= loss
+            self.best_model= self.DNN.state_dict()
 
-        return self.loss
+        return loss
     
     def train(self):
         
         self.DNN.train()
-        self.optimizer.step(self.compute_loss)
+        self.optimizer.step(self.closure)
