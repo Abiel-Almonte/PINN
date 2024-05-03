@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from typing import Tuple
 
-SCALE: torch.float32= 1 #standard deviation to select B for RFFE
+SCALE: torch.float32= 2 #standard deviation to select B for RFFE
 
 ############################################################################################
 
@@ -24,10 +24,8 @@ def rff_emb(
     v: torch.Tensor,
     B: torch.Tensor
 )-> torch.Tensor:
-    
-    v= v @ B # matmul 
 
-    v_proj=  2* torch.pi* v
+    v_proj=  2* torch.pi* v @ B  # matmul
     return torch.cat((torch.sin(v_proj),  torch.cos(v_proj)), dim=-1)
 
 class RFFEmbeddings(nn.Module):
@@ -42,8 +40,6 @@ class RFFEmbeddings(nn.Module):
         self.out_features= out_features
         self.B= sample_B(size=(in_features, out_features//2))
 
-        self.register_buffer('b', self.B)
-    
     def forward(
         self,
         v: torch.Tensor
@@ -60,7 +56,7 @@ class MLP(nn.Module):
         self,
         n_inputs: int= 2,
         neurons: int= 256,
-        n_layers: int= 5,
+        n_layers: int= 9,
         n_outputs: int= 1,
     )-> None:
         
@@ -68,10 +64,8 @@ class MLP(nn.Module):
         act_fn= nn.Tanh()
 
         self.input_layer= nn.Sequential(
-            *[nn.Linear(n_inputs, n_inputs),
-              RFFEmbeddings(n_inputs, neurons), act_fn]
+           *[RFFEmbeddings(n_inputs, neurons), act_fn]
         )
-
 
         self.hidden_layers= nn.Sequential(
             *[nn.Sequential(
