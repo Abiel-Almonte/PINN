@@ -3,6 +3,7 @@ from functools import partial
 from architecture import MLP
 from util import UTIL_FUNCS
 import numpy as np
+import copy
 import torch
 from torch import(
     autograd, optim,
@@ -32,6 +33,7 @@ class WaveNN:
         
         self.iter=0
         self.loss_log=[]
+        self.evolution= []
         self.best_model= None
         self.best_loss= float('inf')
 
@@ -107,12 +109,12 @@ class WaveNN:
             if not self.iter % 100:
 
                 self.loss_log.append(loss)
-                print(f'Iteration: {self.iter}, L2 Loss: {loss:.2e}, Residual: {r_loss:.2e},\
-                      Initial Conditions: {ic_loss:.2e}, Boundary Conditions: {bc_loss:.2e}')
+                self.evolution.append(copy.deepcopy(self.DNN.state_dict()))
+                print(f'Iteration: {self.iter}, L2 Loss: {loss:.2e}, Residual: {r_loss:.2e}, Initial Conditions: {ic_loss:.2e}, Boundary Conditions: {bc_loss:.2e}')
             
             if loss< self.best_loss:
                 self.best_loss= loss
-                self.best_model= self.DNN.state_dict()
+                self.best_model= copy.deepcopy(self.DNN.state_dict())
                 
             return loss
 
@@ -137,6 +139,6 @@ class WaveNN:
 
         self.DNN.eval()
 
-        u = self.net_u(t, x)
+        u = self.u_net(t, x)
         u = u.detach().cpu().numpy()
         return u
