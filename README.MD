@@ -22,7 +22,7 @@ $$u(0,x)= g(x)= sin(\pi x)+ \frac{1}{2}sin(4\pi x), \frac{\partial u}{\partial t
 $$u(t,0)= u(t,1)= h(t,x)= 0$$
 
 ### Exact Solution:
-$$u(x,t)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
+$$u(t, x)= sin(\pi x)cos(2\pi t)+ \frac{1}{2}sin(4\pi x)cos(8\pi t)$$
 
 ---
 ## MLP Implementation:
@@ -36,12 +36,10 @@ $$\gamma(v)=
 \end{bmatrix}, B \in \mathbb R^{2 \times\frac{d_l}{2}}$$
 
 ### L1 Loss:
-$$\cal L(\theta)= L_{ic} + L_{bc} + L_{de} + L_{r}$$
-
-$${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}}\left|u_\theta(t^i_{r}, x^i_{r}) - u(x^i_{r}) \right| $$
+$$\cal L(\theta)= L_{ic} + L_{bc} + L_{r}$$
 
 $${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|$$
 
 $${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|$$
 
-$${\cal L_{de}}(\theta)= \frac{1}{N_{de}}\sum_{i=1}^{N_{de}} \left|\frac{\partial u_\theta}{\partial t}(t^i_{de}, x^i_{de}) -4\frac{\partial^2 u_\theta}{\partial x^2}(t^i_{de}, x^i_{de})\right|$$
+$${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}} \left|\frac{\partial u_\theta}{\partial t}(t^i_{r}, x^i_{r}) -4\frac{\partial^2 u_\theta}{\partial x^2}(t^i_{r}, x^i_{r})\right|$$
