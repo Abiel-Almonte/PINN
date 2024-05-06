@@ -1,1 +1,1 @@
-from .model import WaveEqNN
+from .model import WaveNN
