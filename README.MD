@@ -35,14 +35,14 @@ $$\gamma(v)=
 \sin(2\pi Bv) \\
 \end{bmatrix}, B \in \mathbb R^{2 \times\frac{d_l}{2}}$$
 
-### L1 Loss:
+### L2 Loss:
 $$\cal L(\theta)= L_{ic} + L_{bc} + L_{r}$$
 
-$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|$$
+$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2$$
 
-$${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|$$
+$${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|^2$$
 
-$${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}} \left|\frac{\partial u_\theta}{\partial t}(t^i_{r}, x^i_{r}) -4\frac{\partial^2 u_\theta}{\partial x^2}(t^i_{r}, x^i_{r})\right|$$
+$${\cal L_{r}}(\theta)= \frac{1}{N_{r}}\sum_{i=1}^{N_{r}} \left|\frac{\partial u_\theta}{\partial t}(t^i_{r}, x^i_{r}) -4\frac{\partial^2 u_\theta}{\partial x^2}(t^i_{r}, x^i_{r})\right|^2$$
 
 ---
 ## Results
