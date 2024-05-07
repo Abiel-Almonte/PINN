@@ -38,7 +38,7 @@ $$\gamma(v)=
 ### L2 Loss:
 $$\cal L(\theta)= L_{ic} + L_{bc} + L_{r}$$
 
-$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2$$
+$${\cal L_{ic}}(\theta)= \frac{1}{N_{ic}}\sum_{i=1}^{N_{ic}} \left|u_\theta(0, x^i_{ic}) - g(x^i_{ic})\right|^2  + \left|\frac{\partial u_\theta}{\partial t}(0, x^i_{ic})\right|^2$$
 
 $${\cal L_{bc}}(\theta)= \frac{1}{N_{bc}}\sum_{i=1}^{N_{bc}} \left|h_\theta(t^i_{bc}, 0) - h_\theta(t^i_{bc}, 1)\right|^2$$
 
