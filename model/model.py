@@ -108,7 +108,7 @@ class WaveNN:
 
             if not self.iter % 100:
 
-                self.loss_log.append(loss)
+                self.loss_log.append(loss.detach().cpu().numpy())
                 self.evolution.append(copy.deepcopy(self.DNN.state_dict()))
                 print(f'Iteration: {self.iter}, L2 Loss: {loss:.2e}, Residual: {r_loss:.2e}, Initial Conditions: {ic_loss:.2e}, Boundary Conditions: {bc_loss:.2e}')
             
