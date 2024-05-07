@@ -43,8 +43,13 @@ def plot(i):
     ax.clear()
     c= ax.pcolormesh(t, x, np.abs(u_exact - u_pred), cmap='RdBu', vmin=-1.5, vmax=1.5, shading='auto')
     ax.set(ylabel= '$x$', xlabel='$t$', title= 'Absolute Error $\Delta u(t, x)$')
-    ax.annotate(f'step: {i*100}', xy= (0.5, 0.92))
     if i== 1: fig.colorbar(c, ax=ax)
+
+    ax= axes[3]
+    ax.clear()
+    ax.plot(model.loss_log[0:i])
+    ax.set(yscale= 'log', xlabel= 'steps $\cdot 10^2$', ylabel= '$\mathcal{L}$', title= 'L2 Loss')
+    ax.annotate(f'step: {i*100}', xy= (0.5, 0.92))
     fig.tight_layout()
 
 if __name__ == '__main__':
@@ -53,7 +58,7 @@ if __name__ == '__main__':
     model.train(50000, 128)
     torch.save(model.best_model, 'waveNN.pt')
 
-    fig, axes =plt.subplots(1, 3, figsize=(10, 4)) 
+    fig, axes =plt.subplots(1, 4, figsize=(15, 4)) 
 
     anim= FuncAnimation(fig, partial(plot), frames=500)
     anim.save('waveNN-Animation.gif', fps=50, dpi=200, writer='pillow')
